@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — The Glitch 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --bg:     #060608;
+    --bg2:    #0d0d12;
+    --bg3:    #11111a;
+    --neon:   #00ff9d;
+    --neon2:  #00cfff;
+    --red:    #ff2255;
+    --yellow: #ffdd00;
+    --text:   #c8d0e0;
+    --muted:  #4a5568;
+    --border: rgba(0,255,157,0.15);
+    --mono:   'Share Tech Mono', monospace;
+    --display:'Orbitron', monospace;
+    --body:   'Rajdhani', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* scanlines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* grid bg */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,157,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,157,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(6,6,8,0.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .nav-logo {
+    font-family: var(--display); font-size: 13px; font-weight: 900;
+    color: var(--neon); letter-spacing: 2px; text-decoration: none;
+  }
+  .nav-back {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    text-decoration: none; letter-spacing: 1.5px;
+    border: 1px solid transparent; padding: 6px 14px; border-radius: 2px;
+    transition: all .2s;
+  }
+  .nav-back:hover { color: var(--neon); border-color: var(--border); }
+  .nav-back::before { content: '← '; }
+
+  /* ─── LAYOUT ─── */
+  .page {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    padding: 100px 24px 60px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* ─── HEADER ─── */
+  .form-header { text-align: center; margin-bottom: 48px; }
+
+  .error-badge {
+    display: inline-block;
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+    background: rgba(255,34,85,0.1); border: 1px solid rgba(255,34,85,0.3);
+    padding: 4px 14px; border-radius: 2px; letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .error-badge::before { content: '⚠ '; }
+
+  .form-title {
+    font-family: var(--display); font-size: clamp(32px,7vw,64px);
+    font-weight: 900; color: #fff; letter-spacing: -1px; line-height: 1;
+    animation: glitch 5s infinite;
+    position: relative;
+  }
+
+  .form-title::before, .form-title::after {
+    content: 'REGISTER'; position: absolute; left: 0; right: 0;
+    animation: glitch-clip 3.5s infinite linear alternate-reverse;
+  }
+  .form-title::before { color: var(--red);  animation-delay: -1s; }
+  .form-title::after  { color: var(--neon2); animation-delay: -2s; }
+
+  .form-year {
+    font-family: var(--display); font-size: 18px; color: var(--neon);
+    letter-spacing: 8px; margin-top: 8px;
+  }
+
+  .form-subtitle {
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    margin-top: 20px; letter-spacing: 1px; line-height: 1.8;
+  }
+
+  .deadline-pill {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+    font-family: var(--mono); font-size: 11px; color: var(--yellow);
+    background: rgba(255,221,0,0.07); border: 1px solid rgba(255,221,0,0.2);
+    padding: 8px 18px;
+  }
+  .deadline-pill::before { content: '⏰'; }
+
+  /* ─── FORM CARD ─── */
+  .form-card {
+    width: 100%; max-width: 720px;
+    background: var(--bg2); border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+
+  .form-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--neon), var(--neon2));
+  }
+
+  /* terminal top bar */
+  .card-terminal {
+    background: #080810; border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #28ca41; }
+  .card-terminal-title {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    letter-spacing: 2px; margin-left: 6px;
+  }
+
+  .card-body { padding: 40px 40px 48px; }
+
+  /* ─── SECTION DIVIDERS ─── */
+  .field-section {
+    margin-bottom: 36px;
+  }
+  .field-section-label {
+    font-family: var(--mono); font-size: 10px; color: var(--neon);
+    letter-spacing: 4px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .field-section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ─── FIELDS ─── */
+  .field { margin-bottom: 20px; }
+
+  label {
+    display: block;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  label .required { color: var(--red); margin-left: 3px; }
+  label .optional { color: var(--muted); font-size: 10px; letter-spacing: 1px; margin-left: 6px; opacity: 0.6; }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"] {
+    width: 100%;
+    background: #080810;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 0;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 13px 16px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="url"]:focus {
+    border-color: rgba(0,255,157,0.5);
+    box-shadow: 0 0 0 3px rgba(0,255,157,0.06);
+  }
+
+  input[type="text"]::placeholder,
+  input[type="email"]::placeholder,
+  input[type="url"]::placeholder {
+    color: var(--muted); opacity: 0.6;
+  }
+
+  input.error-field {
+    border-color: rgba(255,34,85,0.5) !important;
+    box-shadow: 0 0 0 3px rgba(255,34,85,0.06) !important;
+  }
+
+  .field-hint {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    margin-top: 6px; letter-spacing: 1px; line-height: 1.6;
+  }
+
+  .field-error {
+    font-family: var(--mono); font-size: 10px; color: var(--red);
+    margin-top: 6px; letter-spacing: 1px;
+    display: none;
+  }
+
+  .field-error::before { content: '⚠ '; }
+
+  /* member rows */
+  .member-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+
+  .member-card {
+    background: #080810; border: 1px solid rgba(255,255,255,0.06);
+    padding: 20px;
+  }
+
+  .member-tag {
+    font-family: var(--mono); font-size: 9px; color: var(--neon);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 14px; display: block;
+  }
+
+  .member-card .field { margin-bottom: 14px; }
+  .member-card .field:last-child { margin-bottom: 0; }
+  .member-card label { font-size: 10px; margin-bottom: 6px; }
+
+  .member-card-3 {
+    grid-column: 1 / -1;
+    background: rgba(0,255,157,0.02);
+    border-color: rgba(0,255,157,0.08);
+  }
+
+  .member-tag-optional { color: var(--muted); }
+
+  /* optional member toggle */
+  .toggle-member {
+    font-family: var(--mono); font-size: 11px; color: var(--neon);
+    background: none; border: 1px solid var(--border);
+    padding: 10px 18px; cursor: pointer; letter-spacing: 2px;
+    width: 100%; text-align: left; transition: all .2s;
+    margin-top: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .toggle-member:hover { background: rgba(0,255,157,0.04); }
+  .toggle-member::before { content: '+'; font-size: 16px; }
+  .toggle-member.active::before { content: '−'; }
+
+  .member-3-wrapper { display: none; }
+  .member-3-wrapper.visible { display: block; }
+
+  /* ─── SUBMIT ─── */
+  .submit-area {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+  }
+
+  .submit-note {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    line-height: 1.8; margin-bottom: 24px;
+  }
+
+  .submit-note span { color: var(--neon); }
+
+  .btn-submit {
+    font-family: var(--mono); font-size: 13px; font-weight: bold;
+    letter-spacing: 2px; text-transform: uppercase;
+    background: var(--neon); color: #000; border: none;
+    padding: 16px 40px; cursor: pointer; width: 100%;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+
+  .btn-submit:hover { background: #fff; box-shadow: 0 0 30px rgba(0,255,157,0.35); }
+  .btn-submit:active { transform: translateY(1px); }
+
+  .btn-submit:disabled {
+    background: var(--muted); cursor: not-allowed; box-shadow: none;
+  }
+
+  .btn-submit .loading { display: none; }
+  .btn-submit.submitting .label { display: none; }
+  .btn-submit.submitting .loading { display: inline; }
+
+  /* ─── SUCCESS STATE ─── */
+  .success-screen {
+    display: none;
+    width: 100%; max-width: 720px;
+    background: var(--bg2); border: 1px solid rgba(0,255,157,0.3);
+    position: relative; overflow: hidden; text-align: center;
+    padding: 64px 40px;
+  }
+
+  .success-screen::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--neon), var(--neon2));
+  }
+
+  .success-icon { font-size: 56px; display: block; margin-bottom: 20px; }
+
+  .success-title {
+    font-family: var(--display); font-size: 28px; font-weight: 900;
+    color: var(--neon); letter-spacing: 2px; margin-bottom: 14px;
+    text-shadow: 0 0 20px rgba(0,255,157,0.4);
+  }
+
+  .success-msg {
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    line-height: 1.9; max-width: 440px; margin: 0 auto 32px;
+  }
+
+  .success-team {
+    background: rgba(0,255,157,0.06); border: 1px solid var(--border);
+    padding: 20px 28px; margin: 24px auto;
+    font-family: var(--mono); font-size: 12px; color: var(--neon);
+    max-width: 380px; line-height: 2; text-align: left;
+  }
+
+  .success-back {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    text-decoration: none; letter-spacing: 1.5px;
+    border-bottom: 1px solid var(--border); padding-bottom: 2px;
+    transition: color .2s;
+  }
+  .success-back:hover { color: var(--neon); }
+
+  /* ─── FOOTER ─── */
+  .form-footer {
+    margin-top: 40px; text-align: center;
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    letter-spacing: 1.5px; opacity: 0.5;
+  }
+
+  /* ─── GLITCH ANIMATIONS ─── */
+  @keyframes glitch {
+    0%, 100% { text-shadow: .05em 0 0 var(--red), -.05em -.025em 0 var(--neon2), -.025em .05em 0 var(--neon); }
+    15%       { text-shadow: -.05em -.025em 0 var(--red), .025em .025em 0 var(--neon2), -.05em -.05em 0 var(--neon); }
+    50%       { text-shadow: .025em .05em 0 var(--red), .05em 0 0 var(--neon2), 0 -.05em 0 var(--neon); }
+  }
+  @keyframes glitch-clip {
+    0%   { clip-path: inset(40% 0 61% 0); transform: translate(-2px); }
+    20%  { clip-path: inset(92% 0 1%  0); transform: translate(2px); }
+    40%  { clip-path: inset(43% 0 1%  0); transform: translate(-1px); }
+    60%  { clip-path: inset(25% 0 58% 0); transform: translate(3px); }
+    80%  { clip-path: inset(54% 0 7%  0); transform: translate(-2px); }
+    100% { clip-path: inset(58% 0 43% 0); transform: translate(0); }
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,255,157,.4)} 50%{box-shadow:0 0 0 8px rgba(0,255,157,0)} }
+
+  .form-card  { animation: fadeInUp .6s .1s ease both; }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 20px; }
+    .card-body { padding: 28px 20px 36px; }
+    .member-grid { grid-template-columns: 1fr; }
+    .member-card-3 { grid-column: auto; }
+    .form-title { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="the-glitch-2026.html" class="nav-logo">THE GLITCH 2026</a>
+  <a href="the-glitch-2026.html" class="nav-back">Back to site</a>
+</nav>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="form-header">
+    <div class="error-badge">REGISTRATION OPEN — CLOSES APRIL 30</div>
+    <div class="form-title">REGISTER</div>
+    <div class="form-year">2026</div>
+    <p class="form-subtitle">
+      One submission per team &nbsp;·&nbsp; Teams of 2–3 members<br>
+      ASFM High School students only
+    </p>
+    <div class="deadline-pill">Deadline: April 30, 2026 — spots limited to 12 teams</div>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="form-card" id="formCard">
+    <div class="card-terminal">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="card-terminal-title">REGISTRATION_FORM — THE_GLITCH_2026.sh</span>
+    </div>
+
+    <div class="card-body">
+      <form id="regForm" novalidate>
+
+        <!-- TEAM INFO -->
+        <div class="field-section">
+          <div class="field-section-label">Team Info</div>
+
+          <div class="field">
+            <label for="teamName">Team Name <span class="required">*</span></label>
+            <input type="text" id="teamName" name="teamName" placeholder="e.g. NULL POINTER" autocomplete="off" />
+            <div class="field-error" id="err-teamName">Please enter your team name.</div>
+          </div>
+        </div>
+
+        <!-- MEMBER 1 -->
+        <div class="field-section">
+          <div class="field-section-label">Team Members</div>
+
+          <div class="member-grid">
+
+            <div class="member-card">
+              <span class="member-tag">Member 01 · Team Lead *</span>
+              <div class="field">
+                <label for="m1name">Full Name <span class="required">*</span></label>
+                <input type="text" id="m1name" name="m1name" placeholder="First Last" autocomplete="off" />
+                <div class="field-error" id="err-m1name">Required.</div>
+              </div>
+              <div class="field">
+                <label for="m1email">ASFM Email <span class="required">*</span></label>
+                <input type="email" id="m1email" name="m1email" placeholder="student@asfm.edu.mx" autocomplete="off" />
+                <div class="field-error" id="err-m1email">Please enter a valid email.</div>
+              </div>
+            </div>
+
+            <div class="member-card">
+              <span class="member-tag">Member 02 *</span>
+              <div class="field">
+                <label for="m2name">Full Name <span class="required">*</span></label>
+                <input type="text" id="m2name" name="m2name" placeholder="First Last" autocomplete="off" />
+                <div class="field-error" id="err-m2name">Required.</div>
+              </div>
+              <div class="field">
+                <label for="m2email">ASFM Email <span class="required">*</span></label>
+                <input type="email" id="m2email" name="m2email" placeholder="student@asfm.edu.mx" autocomplete="off" />
+                <div class="field-error" id="err-m2email">Please enter a valid email.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- toggle for 3rd member -->
+          <button type="button" class="toggle-member" id="toggleM3">
+            Add a 3rd Team Member (optional)
+          </button>
+
+          <!-- member 3 -->
+          <div class="member-3-wrapper" id="m3wrapper">
+            <div class="member-grid" style="margin-top:16px;">
+              <div class="member-card member-card-3">
+                <span class="member-tag member-tag-optional">Member 03 · Optional</span>
+                <div class="member-grid">
+                  <div class="field">
+                    <label for="m3name">Full Name</label>
+                    <input type="text" id="m3name" name="m3name" placeholder="First Last" autocomplete="off" />
+                  </div>
+                  <div class="field">
+                    <label for="m3email">ASFM Email</label>
+                    <input type="email" id="m3email" name="m3email" placeholder="student@asfm.edu.mx" autocomplete="off" />
+                    <div class="field-error" id="err-m3email">Please enter a valid email.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="submit-area">
+          <div class="submit-note">
+            By submitting, you confirm that all members are <span>ASFM high school students</span>
+            and agree to follow competition rules. Only <span>one submission per team</span> is needed.
+            You'll receive a confirmation email after submitting.
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span class="label">Submit Registration</span>
+            <span class="loading">Processing… <span style="animation:blink 1s infinite;display:inline-block">▌</span></span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen">
+    <span class="success-icon">✓</span>
+    <div class="success-title">REGISTRATION CONFIRMED</div>
+    <div class="success-team" id="successDetails"></div>
+    <p class="success-msg">
+      Your team has been registered for <strong style="color:#fff">The Glitch 2026</strong>.<br>
+      Check your email for confirmation. See you on <strong style="color:var(--neon)">May 18th</strong> at the Business Hub.
+    </p>
+    <a href="the-glitch-2026.html" class="success-back">← Back to competition site</a>
+  </div>
+
+  <div class="form-footer">
+    THE GLITCH 2026 · THOTH CLUB · ASFM · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7004181f0418301103161d5e1514055e1d08">[email&#160;protected]</a>
+  </div>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  //  EMAILJS SETUP — fill in these 3 values (see steps below)
+  // ═══════════════════════════════════════════════════════
+  const EMAILJS_PUBLIC_KEY  = "nmhgvAwbKyPkHSgUW";
+  const EMAILJS_SERVICE_ID  = "thoth_theglitch";
+  const EMAILJS_TEMPLATE_ID = "template_cevp7ri";
+  const NOTIFY_EMAIL        = "27kim9987@asfm.mx"; // your email — already set!
+  // ═══════════════════════════════════════════════════════
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  /* ── Helpers ── */
+  function showError(id, msg) {
+    const el    = document.getElementById('err-' + id);
+    const input = document.getElementById(id);
+    if (el)    { el.textContent = msg || el.textContent; el.style.display = 'block'; }
+    if (input) { input.classList.add('error-field'); }
+  }
+
+  function clearError(id) {
+    const el    = document.getElementById('err-' + id);
+    const input = document.getElementById(id);
+    if (el)    { el.style.display = 'none'; }
+    if (input) { input.classList.remove('error-field'); }
+  }
+
+  function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function get(id)    { return (document.getElementById(id)?.value || '').trim(); }
+
+  /* ── Live error clearing ── */
+  ['teamName','m1name','m1email','m2name','m2email','m3name','m3email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => clearError(id));
+  });
+
+  /* ── 3rd member toggle ── */
+  document.getElementById('toggleM3').addEventListener('click', function() {
+    const wrapper = document.getElementById('m3wrapper');
+    const visible = wrapper.classList.toggle('visible');
+    this.classList.toggle('active', visible);
+    this.textContent = visible ? '− Remove 3rd Member' : '+ Add a 3rd Team Member (optional)';
+    if (!visible) {
+      document.getElementById('m3name').value  = '';
+      document.getElementById('m3email').value = '';
+      clearError('m3email');
+    }
+  });
+
+  /* ── Submit ── */
+  document.getElementById('regForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    let valid = true;
+    if (!get('teamName'))          { showError('teamName', 'Please enter your team name.'); valid = false; }
+    if (!get('m1name'))            { showError('m1name',   'Required.'); valid = false; }
+    if (!isEmail(get('m1email')))  { showError('m1email',  'Please enter a valid email.'); valid = false; }
+    if (!get('m2name'))            { showError('m2name',   'Required.'); valid = false; }
+    if (!isEmail(get('m2email')))  { showError('m2email',  'Please enter a valid email.'); valid = false; }
+
+    const m3visible = document.getElementById('m3wrapper').classList.contains('visible');
+    if (m3visible && get('m3email') && !isEmail(get('m3email'))) {
+      showError('m3email', 'Please enter a valid email.'); valid = false;
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.classList.add('submitting');
+    btn.disabled = true;
+
+    const payload = {
+      teamName: get('teamName'),
+      m1name:   get('m1name'),  m1email: get('m1email'),
+      m2name:   get('m2name'),  m2email: get('m2email'),
+      m3name:   m3visible && get('m3name')  ? get('m3name')  : '(none)',
+      m3email:  m3visible && get('m3email') ? get('m3email') : '(none)',
+    };
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:   NOTIFY_EMAIL,
+        team_name:  payload.teamName,
+        m1_name:    payload.m1name,   m1_email: payload.m1email,
+        m2_name:    payload.m2name,   m2_email: payload.m2email,
+        m3_name:    payload.m3name,   m3_email: payload.m3email,
+        submitted_at: new Date().toLocaleString('en-MX', { timeZone: 'America/Monterrey' }),
+      });
+
+      showSuccess(payload, m3visible);
+
+    } catch (err) {
+      btn.classList.remove('submitting');
+      btn.disabled = false;
+      alert("Could not send registration — please email us directly at 27kim9987@asfm.mx");
+      console.error("EmailJS error:", err);
+    }
+  });
+
+  function showSuccess(data, m3visible) {
+    document.getElementById('formCard').style.display = 'none';
+
+    const m3line = (m3visible && data.m3name !== '(none)')
+      ? `\n› ${data.m3name}${data.m3email !== '(none)' ? ' — ' + data.m3email : ''}`
+      : '';
+
+    const details =
+      `Team: ${data.teamName}\n\n` +
+      `› ${data.m1name} — ${data.m1email}\n` +
+      `› ${data.m2name} — ${data.m2email}` +
+      m3line;
+
+    const box = document.getElementById('successDetails');
+    box.style.whiteSpace = 'pre';
+    box.textContent = details;
+    document.getElementById('successScreen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
